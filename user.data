@@ -1,0 +1,5 @@
+#!/bin/bash
+passwd <<EOF
+password
+password
+EOF
