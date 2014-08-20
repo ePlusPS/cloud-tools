@@ -65,11 +65,11 @@ fi
 name=${machine:-$name}
 if [ -f './user-data' ]; then
   userdata='./user.data'
-  userdata="--user-data $userdata"
+  userdata="--config-drive true --user-data $userdata"
 fi
 keyname=${keyname:-root}
 
 echo "Nova boot:   ${name}"
-nova boot --image trusty --flavor 2 --key-name ${keyname} --config-drive true ${userdata} --nic net-id=${netid} ${name}
+nova boot --image trusty --flavor 2 --key-name ${keyname} ${userdata} --nic net-id=${netid} ${name}
 
 
