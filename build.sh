@@ -63,12 +63,13 @@ else
   name=trusty-nonet
 fi
 name=${machine:-$name}
-userdata='./user.data'
-userdata="--user-data $userdata"
+if [ -f './user-data' ]; then
+  userdata='./user.data'
+  userdata="--user-data $userdata"
+fi
+keyname=${keyname:-root}
 
-echo "Net-ID: ${netid}"
-echo "Name:   ${name}"
-
+echo "Nova boot:   ${name}"
 nova boot --image trusty --flavor 2 --key-name ${keyname} --config-drive true ${userdata} --nic net-id=${netid} ${name}
 
 
