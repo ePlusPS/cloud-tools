@@ -53,21 +53,34 @@ if [ $# -eq 0 ] ;then
   exit 1
 fi
 
-source ${openrc:-~/keystonerc_admin}
+source ${openrc:-~/openrc}
+
+if [ ! "`glance image-list | grep trusty`" ]; then
+  echo importing image, this may take a while
+  glance image-create --location https://cloud-images.ubuntu.com/trusty/current/trusty-server-cloudimg-amd64-disk1.img --container-format bare --disk-format qcow2 --is-public True --name trusty --progress
+fi
+
+keyname=${keyname:-root}
+if [ ! "`nova keypair-list | grep ${keyname}`" ]; then
+  if [ "${keyname}" -eq "root" ]; then
+    nova keypair-add --pub-key /root/.ssh/id_rsa.pub root
+  else
+    ssh-keygen -f id_rsa -t rsa -N ''
+    nova keypair-add --pub-key ./id_rsa.pub ${keyname}
+  fi
+fi
 
 if [ ${network} ]; then
   netid=`neutron net-list | awk "/ ${network} / {print \\\$2}"`
-  name=trusty-${network}
+  name=${machine:-trusty-${network}}
 else
   netid=`neutron net-list | grep -v '+' | grep -v 'id' | head -1 | awk '/ / {print $2}'`
-  name=trusty-nonet
+  name=${machine:-trusty-`neutron net-list | grep -v '+' | grep -v 'id' | head -1 | awk '/ / {print $4}'`}
 fi
-name=${machine:-$name}
 if [ -f './user-data' ]; then
   userdata='./user.data'
   userdata="--config-drive true --user-data $userdata"
 fi
-keyname=${keyname:-root}
 
 echo "Nova boot:   ${name}"
 nova boot --image trusty --flavor 2 --key-name ${keyname} ${userdata} --nic net-id=${netid} ${name}
